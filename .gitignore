@@ -1,0 +1,41 @@
+# IDE file
+.idea/
+*.py[cod]
+__pycache__/
+
+# 日志文件
+*.log
+
+test/
+
+.vscode/
+
+
+# python
+env/
+data/
+tests/
+
+data/
+
+
+# pyinstaller
+*.manifest
+*.spec
+
+build/
+run.spec
+
+# installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+wrap.bat
+
+env/
+
+dist/
+
+whut_cookie.txt
+
+secret_info.txt
