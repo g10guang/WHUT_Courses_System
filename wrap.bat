@@ -1,0 +1,1 @@
+pyinstaller --add-data assert\*;assert --distpath F:\tmp\grabcourses --paths=F:\code\python\projects\grabCourses\env\Scripts --paths F:\code\python\projects\grabCourses\env\Lib\site-packages -w .\run.py
