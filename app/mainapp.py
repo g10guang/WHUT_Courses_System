@@ -15,6 +15,7 @@ from PIL import ImageTk, Image
 from app import tasks
 from app.tasks import append_task_to_manager
 from app import LESSON_URL, LESSON_NAME, TEACHER, CLASSROOM, SELECTED, CAPACITY, CREDIT, LANG_LEVEL
+import webbrowser
 
 # 声明两个字体的使用
 ARIAL_16_FONT = ('Arial', 16)
@@ -175,12 +176,11 @@ class LoginPage(tk.Frame):
             self.controller.show_page(ChooseCoursePage.__name__)
 
         def more():
-            # 显示用户使用前提示信息
-            tk.messagebox.showinfo(title='用户须知',
-                                   message='获取课程信息应在抢课开始前一天\n'
-                                           '如果你已经获取了课程信息，请不要勾选重新获取课程信息\n'
-                                           '如果你确保用户名和密码正确，不勾选验证身份更加快速\n'
-                                           '更详细信息请查看：https://github.com/xxxxxxx')
+            """
+            通过 webbrowser 调用浏览器打开连接，链接到 github.com 仓库 README.md
+            :return:
+            """
+            webbrowser.open('https://github.com/g10guang/WHUT_Courses_System')
 
         def show_psw_btn_command():
             """

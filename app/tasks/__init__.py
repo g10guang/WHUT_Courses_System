@@ -37,7 +37,6 @@ def start_process(tasks):
         for index, task in enumerate(tasks):
             # is_new 用于标志一个任务是否已经有一个线程正在执行
             if task['is_new']:
-                print('进程发现新任务')
                 t = threading.Thread(target=start_request, args=(task['username'], task['password'], task['url'], tasks))
                 jobs.append(t)
                 # 由于 manager.ADT 中只能够修改顶级的内容，不能够修改下级内容，所以这里需要整体替换对象，python系统设计原因
