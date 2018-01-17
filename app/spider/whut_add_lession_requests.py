@@ -120,7 +120,7 @@ def request_add_lession(add_lession_url):
     return -1
 
 
-def start_request(username, password, lession_url, tasks):
+def start_request(username, password, lesson_url, tasks):
     local_thread.index_cookie = {}
     local_thread.course_cookie = {}
     # 默认初始状态为 1, 为登陆超时，需要重新登陆操作
@@ -136,7 +136,7 @@ def start_request(username, password, lession_url, tasks):
                 # 途中发生了连接不上，重新请求连接
                 continue
         # 抢课逻辑
-        status = request_add_lession(lession_url)
+        status = request_add_lession(lesson_url)
         # 在连接不上、登陆超时、尚未开始抢课的情况下，需要继续不断重复循环
         if status == 0:
             # 成功抢课
@@ -166,7 +166,7 @@ def start_request(username, password, lession_url, tasks):
             # 遇到了不能够处理的状态码，一直循环
             pass
     # 更新状态是当前线程的最后一步
-    call_back_update_manager(username, lession_url, tasks, status)
+    call_back_update_manager(username, lesson_url, tasks, status)
 
 
 def call_back_update_manager(username, lesson_url, tasks, status):

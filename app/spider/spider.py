@@ -9,6 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import os
+import threading
 from app.spider import JWC_LOGIN_URL, headers, COURSE_SYSTEM_URL, PROFESSIONAL_COURSE_MSG, PUBLIC_COURSE_MSG, PERSONAL_COURSE_MSG, BEAUTIFUL_SOUP_PARSE_METHOD, PROFESSIONAL_COURSE_TABLE_ID, PUBLIC_COURSE_TABLE_ID, PERSONAL_COURSE_TABLE_ID
 from app import PROFESSIONAL_COURSES_JSON_FILE_NAME, PERSONAL_COURSES_JSON_FILE_NAME, ELECTIVE_COURSES_JSON_FILE_NAME
 from app import LESSON_NAME, LESSON_URL, TEACHER, TIME, CLASSROOM, CAPACITY, SELECTED, THIS_SELECTED, LESSON_TYPE, CREDIT, REMARK, LANG_LEVEL
@@ -28,13 +29,43 @@ def get_courses_info(username, password, user_folder):
     # 继续登陆选课系统
     index_html = login_course_system(sess)
     url_dict = get_course_url(index_html)
-    return_value = parse_professional_courses(url_dict[PROFESSIONAL_COURSE_MSG], sess)
-    professional_courses = return_value
-    public_courses = parse_courses(url_dict[PUBLIC_COURSE_MSG], sess)
-    personal_courses = parse_courses(url_dict[PERSONAL_COURSE_MSG], sess)
-    write_json_to_file(professional_courses, os.path.join(user_folder, PROFESSIONAL_COURSES_JSON_FILE_NAME))
-    write_json_to_file(public_courses, os.path.join(user_folder, ELECTIVE_COURSES_JSON_FILE_NAME))
-    write_json_to_file(personal_courses, os.path.join(user_folder, PERSONAL_COURSES_JSON_FILE_NAME))
+
+    # 单线程版本
+    # return_value = parse_professional_courses(url_dict[PROFESSIONAL_COURSE_MSG], sess)
+    # professional_courses = return_value
+    # public_courses = parse_courses(url_dict[PUBLIC_COURSE_MSG], sess)
+    # personal_courses = parse_courses(url_dict[PERSONAL_COURSE_MSG], sess)
+    # write_json_to_file(professional_courses, os.path.join(user_folder, PROFESSIONAL_COURSES_JSON_FILE_NAME))
+    # write_json_to_file(public_courses, os.path.join(user_folder, ELECTIVE_COURSES_JSON_FILE_NAME))
+    # write_json_to_file(personal_courses, os.path.join(user_folder, PERSONAL_COURSES_JSON_FILE_NAME))
+
+    # 多线程版本
+    t1 = threading.Thread(target=thread_task, args=(parse_professional_courses, sess, os.path.join(user_folder, PROFESSIONAL_COURSES_JSON_FILE_NAME), url_dict[PROFESSIONAL_COURSE_MSG]))
+
+    t2 = threading.Thread(target=thread_task, args=(parse_courses, sess, os.path.join(user_folder, ELECTIVE_COURSES_JSON_FILE_NAME), url_dict[PUBLIC_COURSE_MSG]))
+
+    t3 = threading.Thread(target=thread_task, args=(parse_courses, sess, os.path.join(user_folder, PERSONAL_COURSES_JSON_FILE_NAME), url_dict[PERSONAL_COURSE_MSG]))
+
+    t1.start()
+    t2.start()
+    t3.start()
+
+    t1.join()
+    t2.join()
+    t3.join()
+
+
+def thread_task(parse_func, sess, file_path, urls):
+    """
+    线程下载任务
+    :param parse_func:
+    :param sess:
+    :param file_path:
+    :param urls:
+    :return:
+    """
+    course_info = parse_func(urls, sess)
+    write_json_to_file(course_info, file_path)
 
 
 def login_jwc(username, password, sess):
