@@ -7,7 +7,7 @@
 import json
 import os
 from app import DATA_DIR, LESSON_NAME
-from app import PROFESSIONAL_COURSES_JSON_FILE_NAME, ELECTIVE_COURSES_JSON_FILE_NAME, PERSONAL_COURSES_JSON_FILE_NAME, PROFESSIONAL_COURSES_SHOW_NAME, PERSONAL_COURSES_SHOW_NAME, ELECTIVE_COURSES_SHOW_NAME
+from app import PROFESSIONAL_COURSES_JSON_FILE_NAME, ELECTIVE_COURSES_JSON_FILE_NAME, PERSONAL_COURSES_JSON_FILE_NAME, PROFESSIONAL_COURSES_SHOW_NAME, PERSONAL_COURSES_SHOW_NAME, ELECTIVE_COURSES_SHOW_NAME, EN_PT_COURSES_JSON_FILE_NAME, EN_PE_COURSES_SHOW_NAME
 from app.tools import grab_courses
 
 def remove_space(string):
@@ -47,16 +47,14 @@ def load_courses_info(username, password):
         user_dir = os.path.join(DATA_DIR, username)
         if not os.path.exists(user_dir):
             grab_courses.grab_courses(username, password)
-        # filter 用于清洗没用的数据
         with open(os.path.join(user_dir, ELECTIVE_COURSES_JSON_FILE_NAME), encoding='utf-8') as f:
             elective_courses = json.load(f)
-            # elective_courses = list(filter(lambda item: item['suid_obj'], json.load(f)))
         with open(os.path.join(user_dir, PERSONAL_COURSES_JSON_FILE_NAME), encoding='utf-8') as f:
             personal_courses = json.load(f)
-            # personal_courses = list(filter(lambda item: item['suid_obj'], json.load(f)))
         with open(os.path.join(user_dir, PROFESSIONAL_COURSES_JSON_FILE_NAME), encoding='utf-8') as f:
             professional_courses = json.load(f)
-            # professional_courses = list(filter(lambda item: item['suid_obj'], json.load(f)))
-        courses = {ELECTIVE_COURSES_SHOW_NAME: elective_courses, PERSONAL_COURSES_SHOW_NAME: personal_courses, PROFESSIONAL_COURSES_SHOW_NAME: professional_courses}
+        with open(os.path.join(user_dir, EN_PT_COURSES_JSON_FILE_NAME), encoding='utf-8') as f:
+            en_pe_courses = json.load(f)
+        courses = {ELECTIVE_COURSES_SHOW_NAME: elective_courses, PERSONAL_COURSES_SHOW_NAME: personal_courses, PROFESSIONAL_COURSES_SHOW_NAME: professional_courses, EN_PE_COURSES_SHOW_NAME: en_pe_courses}
         clean_lesson_name(courses)
         return courses

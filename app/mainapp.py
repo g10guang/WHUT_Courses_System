@@ -8,7 +8,7 @@ import os
 import tkinter as tk
 import tkinter.messagebox
 
-from app import ASSERT_DIR, DATA_DIR, LESSON_TYPE
+from app import ASSERT_DIR, DATA_DIR, LESSON_TYPE, TIME
 from app.tools.courses_info import load_courses_info
 from app.spider import validate
 from PIL import ImageTk, Image
@@ -70,7 +70,7 @@ class MainApp(tk.Tk):
         if page_name == LoginPage.__name__:
             self.geometry('450x320')
         elif page_name == ChooseCoursePage.__name__:
-            self.geometry('1000x700')
+            self.geometry('1300x700')
             # 刷新课程信息展示
             self.frames[page_name].refresh_listbox_info()
             # 清空用户选择项
@@ -241,7 +241,10 @@ class ChooseCoursePage(tk.Frame):
             """
             # 需要展示的信息
             info = [item[TEACHER], item[LESSON_TYPE], '学分：{}'.format(item[CREDIT]),
-                    '容量：{}'.format(item[CAPACITY]), '已选：{}'.format(item[SELECTED])]
+                    item[CLASSROOM], item[TIME]]
+
+            # info = [item[TEACHER], item[LESSON_TYPE], '学分：{}'.format(item[CREDIT]),
+            #         '容量：{}'.format(item[CAPACITY]), '已选：{}'.format(item[SELECTED])]
             return '  '.join(info)
 
         def grab_course():
@@ -343,7 +346,7 @@ class ChooseCoursePage(tk.Frame):
         self.lb1.bind('<<ListboxSelect>>', select1)
         self.lb2.bind('<<ListboxSelect>>', select2)
         btn_check_tasks_list = tk.Button(self, text='查看任务列表', command=check_tasks_list)
-        btn_check_tasks_list.place(x=900, y=650)
+        btn_check_tasks_list.place(x=1200, y=650)
 
     def refresh_listbox_info(self):
         """

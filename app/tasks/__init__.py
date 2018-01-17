@@ -11,12 +11,6 @@ import threading
 from app.spider.whut_add_lession_requests import start_request
 
 
-# 用于压制
-# python 'daemonic processes are not allowed to have children' AssertionError: daemonic processes are not allowed to have children
-# 异常信息
-# os.environ['PYTHONOPTIMIZE'] = '1'
-
-
 def start_process(tasks):
     """
     开启子线程进行抢课逻辑， courses 为通信介质
@@ -44,26 +38,6 @@ def start_process(tasks):
                 tasks[index] = task
                 t.start()
         time.sleep(1)
-
-# 已经把多进程迁移到 run.py 进行，因为 multiprocessing.freeze_support() 需要在最前面被执行
-
-# 用于共享数据
-# A manager object returned by Manager() controls a server process which holds Python objects and allows
-# other processes to manipulate them using proxy.
-# manager = multiprocessing.Manager()
-
-# 创建用于进程间共享内存的 list
-# courses = manager.list()
-
-
-# #  创建进程，并启动进程
-# p = multiprocessing.Process(target=start_process, args=(courses, ))
-# p.start()
-
-
-# 创建线程池
-# pool = multiprocessing.Pool(1)
-# pool.apply_async(func=start_process, args=(courses,))
 
 
 def append_task_to_manager(username: str, password: str, url: str, describe: str):

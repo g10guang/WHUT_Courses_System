@@ -33,14 +33,21 @@ PUBLIC_COURSE_MSG = '公选课选课'
 # 个性课程选课
 PERSONAL_COURSE_MSG = '个性课程选课'
 
+# 英语体育课选课
+EN_PE_COURSE_MSG = '英语体育课选课'
+
 # BeautifulSoup 的解析方法
 BEAUTIFUL_SOUP_PARSE_METHOD = 'lxml'
 
 # 专业课 table_id
 PROFESSIONAL_COURSE_TABLE_ID = 'zykxk_wxkc_tb'
 
+# 注意 “公选课”、“个性课”，“英语体语”的 table_id 是一样的，就是“专业课选课”不一样
 # 公选课 table_id
 PUBLIC_COURSE_TABLE_ID = 'gxkxk_wxkc_tb'
+
+# 英语体语 table_id
+EN_PE_COURSE_TABLE_ID = 'gxkxk_wxkc_tb'
 
 # 个性棵 table_id
 PERSONAL_COURSE_TABLE_ID = 'gxkxk_wxkc_tb'
@@ -48,3 +55,5 @@ PERSONAL_COURSE_TABLE_ID = 'gxkxk_wxkc_tb'
 # 百度首页
 BAIDU_INDEX_URL = 'https://baidu.com'
 
+# 公选课、个性课、英语体语翻页用的 post 链接 url
+GET_MORE_ITEM_URL = 'http://202.114.90.180/Course/gxkxkList.do'

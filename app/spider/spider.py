@@ -10,9 +10,14 @@ from bs4 import BeautifulSoup
 import json
 import os
 import threading
-from app.spider import JWC_LOGIN_URL, headers, COURSE_SYSTEM_URL, PROFESSIONAL_COURSE_MSG, PUBLIC_COURSE_MSG, PERSONAL_COURSE_MSG, BEAUTIFUL_SOUP_PARSE_METHOD, PROFESSIONAL_COURSE_TABLE_ID, PUBLIC_COURSE_TABLE_ID, PERSONAL_COURSE_TABLE_ID
-from app import PROFESSIONAL_COURSES_JSON_FILE_NAME, PERSONAL_COURSES_JSON_FILE_NAME, ELECTIVE_COURSES_JSON_FILE_NAME
+import re
+from urllib import parse
+from app.spider import JWC_LOGIN_URL, headers, COURSE_SYSTEM_URL, PROFESSIONAL_COURSE_MSG, PUBLIC_COURSE_MSG, PERSONAL_COURSE_MSG, BEAUTIFUL_SOUP_PARSE_METHOD, PROFESSIONAL_COURSE_TABLE_ID, PUBLIC_COURSE_TABLE_ID, PERSONAL_COURSE_TABLE_ID, EN_PE_COURSE_MSG, GET_MORE_ITEM_URL
+from app import PROFESSIONAL_COURSES_JSON_FILE_NAME, PERSONAL_COURSES_JSON_FILE_NAME, ELECTIVE_COURSES_JSON_FILE_NAME, EN_PT_COURSES_JSON_FILE_NAME
 from app import LESSON_NAME, LESSON_URL, TEACHER, TIME, CLASSROOM, CAPACITY, SELECTED, THIS_SELECTED, LESSON_TYPE, CREDIT, REMARK, LANG_LEVEL
+
+
+PAGE_MSG_RE_PATTERN = re.compile(r'条，共(\d+)条')
 
 
 def get_courses_info(username, password, user_folder):
@@ -30,15 +35,6 @@ def get_courses_info(username, password, user_folder):
     index_html = login_course_system(sess)
     url_dict = get_course_url(index_html)
 
-    # 单线程版本
-    # return_value = parse_professional_courses(url_dict[PROFESSIONAL_COURSE_MSG], sess)
-    # professional_courses = return_value
-    # public_courses = parse_courses(url_dict[PUBLIC_COURSE_MSG], sess)
-    # personal_courses = parse_courses(url_dict[PERSONAL_COURSE_MSG], sess)
-    # write_json_to_file(professional_courses, os.path.join(user_folder, PROFESSIONAL_COURSES_JSON_FILE_NAME))
-    # write_json_to_file(public_courses, os.path.join(user_folder, ELECTIVE_COURSES_JSON_FILE_NAME))
-    # write_json_to_file(personal_courses, os.path.join(user_folder, PERSONAL_COURSES_JSON_FILE_NAME))
-
     # 多线程版本
     t1 = threading.Thread(target=thread_task, args=(parse_professional_courses, sess, os.path.join(user_folder, PROFESSIONAL_COURSES_JSON_FILE_NAME), url_dict[PROFESSIONAL_COURSE_MSG]))
 
@@ -46,13 +42,17 @@ def get_courses_info(username, password, user_folder):
 
     t3 = threading.Thread(target=thread_task, args=(parse_courses, sess, os.path.join(user_folder, PERSONAL_COURSES_JSON_FILE_NAME), url_dict[PERSONAL_COURSE_MSG]))
 
+    t4 = threading.Thread(target=thread_task, args=(parse_courses, sess, os.path.join(user_folder, EN_PT_COURSES_JSON_FILE_NAME), url_dict[EN_PE_COURSE_MSG]))
+
     t1.start()
     t2.start()
     t3.start()
+    t4.start()
 
     t1.join()
     t2.join()
     t3.join()
+    t4.join()
 
 
 def thread_task(parse_func, sess, file_path, urls):
@@ -105,44 +105,21 @@ def get_course_url(html):
     :return:
     """
     soup = BeautifulSoup(html, BEAUTIFUL_SOUP_PARSE_METHOD)
-    public_courses_url = get_public_courses_info(soup)
-    professional_courses_url = get_professional_courses_info(soup)
-    personal_coures_url = get_personal_courses_info(soup)
-    return_data = {
-        PUBLIC_COURSE_MSG: public_courses_url,
-        PROFESSIONAL_COURSE_MSG: professional_courses_url,
-        PERSONAL_COURSE_MSG: personal_coures_url,
-    }
+    categories = (PUBLIC_COURSE_MSG, PROFESSIONAL_COURSE_MSG, PERSONAL_COURSE_MSG, EN_PE_COURSE_MSG)
+    return_data = {}
+    for c in categories:
+        return_data[c] = get_category_url(c, soup)
     return return_data
 
 
-def get_public_courses_info(soup):
+def get_category_url(category: str, soup):
     """
-    获取公选课信息
+    获取课程种别对应的 url，比如"专业选课", "公选课选课", "个性课程选课", "英语体育课选课"
+    :param category: 类别名称
     :param soup: 解析选课首页的 BeautifulSoup 对象
     :return:
     """
-    href_url = soup.find(text=PUBLIC_COURSE_MSG).parent['href']
-    return '{}/{}'.format(COURSE_SYSTEM_URL, href_url)
-
-
-def get_professional_courses_info(soup):
-    """
-    获取专业课信息
-    :param soup: 解析选课首页的 BeautifulSoup 对象
-    :return:
-    """
-    href_url = soup.find(text=PROFESSIONAL_COURSE_MSG).parent['href']
-    return '{}/{}'.format(COURSE_SYSTEM_URL, href_url)
-
-
-def get_personal_courses_info(soup):
-    """
-    获取个性棵信息
-    :param soup: 解析选课首页的 BeautifulSoup 对象
-    :return:
-    """
-    href_url = soup.find(text=PERSONAL_COURSE_MSG).parent['href']
+    href_url = soup.find(text=category).parent['href']
     return '{}/{}'.format(COURSE_SYSTEM_URL, href_url)
 
 
@@ -207,16 +184,17 @@ def access_url_and_extract_courses_info(courses_url, sess, table_id, parse_metho
     for url in courses_url:
         tmp_resp = sess.get(url, headers=headers)
         tmp_soup = BeautifulSoup(tmp_resp.text, BEAUTIFUL_SOUP_PARSE_METHOD)
-        lesson_info = parse_method(tmp_soup, table_id)
+        lesson_info = parse_method(tmp_soup, table_id, sess)
         courses_info.extend(lesson_info)
     return courses_info
 
 
-def get_professional_courses_info_from_table(soup, table_id):
+def get_professional_courses_info_from_table(soup, table_id, sess):
     """
     由于专业课选课界面与其他课程选课不一样，专业课选课会有起始周信息，而其他没有
     课程信息存储在表格中，该方法提供从表格中获取数据的接口，这是一个通用的方法
     :param soup: 抓取特定课程页面解析后的 BeautifulSoup 对象
+    :param sess: request.Session 会话对象
     :return:
     """
     # 解析 "添加" 按钮中的 url
@@ -266,19 +244,62 @@ def get_professional_courses_info_from_table(soup, table_id):
     return course_info
 
 
-def get_courses_info_from_table(soup, table_id):
+def get_courses_info_from_table(soup, table_id, sess):
     """
     由于专业课选课界面与其他课程选课不一样，专业课选课会有起始周信息，而其他没有
-    :param table:
+    :param soup:
+    :param table_id: 用于在 html 定位 table
+    :param sess: requests.Session 会话
     :return:
     """
+    course_info = []
     # 解析 "添加" 按钮中的 url
     add_btn = soup.find('a', class_='add', target='ajax')
+    # 如：gxkxkAdd.do?xnxq=2017-2018-2&kcdm=4210085150&jxjhh=2015&addid={suid_obj}&gsdm=&keyinfo=15EFCA92D914E5ECB4094F7F30E96155
     add_url = add_btn['href']
+    # 首先分析该页是否已经包含了第一页到最后一页的数据，这里是为了避免分页造成的需要多次爬取同一个课程的多门课信息
+    page_msg = soup.find(text=PAGE_MSG_RE_PATTERN)
+    # 获取到底有多少门课程信息
+    item_num = int(PAGE_MSG_RE_PATTERN.search(page_msg)[1])
+    if item_num >= 10:
+        # 选课网站默认一页 10 条数据，所以这里出现了分页，需要重新发送请求获取所有 items
+        # 从 add_url 中获取以下数据
+        # {'flag': '2',
+        #  'gsdm': '',
+        #  'jxjhh': '2015',
+        #  'kcdm': '4210085150',
+        #  'numPerPage': 50,
+        #  'orderDirection': 'asc',
+        #  'orderField': 'jsxm,sksj',
+        #  'pageNum': 1,
+        #  'temp': 'true',
+        #  'xnxq': '2017-2018-2'}
+        # 其中 gsdm / jxjhh / kcdm / xnxq 是可以通过 add_url 获取的
+        parse_result = parse.urlparse(add_url)
+        # 解析 add_url 中的参数
+        url_params = parse.parse_qs(parse_result.query)
+        data = {}
+        data['gsdm'] = url_params.get('gsdm', [''])[0]
+        data['jxjhh'] = url_params.get('jxjhh')[0]
+        data['kcdm'] = url_params.get('kcdm')[0]
+        data['xnxq'] = url_params.get('xnxq')[0]
+        data['numPerPage'] = item_num
+        data['orderDirection'] = 'asc'
+        data['orderField'] = 'jsxm,sksj'
+        data['pageNum'] = '1'
+        data['temp'] = 'true'
+        # 在"个性课程选课" flag=1
+        # 在"英语体育课选课" flag=2
+        # 这里暂且不考虑 个性课
+        data['flag'] = '2'
+        rspo = sess.post(GET_MORE_ITEM_URL, headers=headers, data=data)
+        soup = BeautifulSoup(rspo.text, BEAUTIFUL_SOUP_PARSE_METHOD)
+    elif item_num == 0:
+        # 没有任何条目可以爬取，可以直接返回
+        return course_info
     table = soup.find('table', id=table_id)
     tbody = table.find('tbody')
     tr_list = tbody.find_all('tr')
-    course_info = []
     # 判断是否有课程信息
     if tr_list:
         for tr in tr_list:
