@@ -1,3 +1,5 @@
+[Download](https://github.com/g10guang/WHUT_Courses_System/raw/master/release/WHUT1.0.zip)
+
 # 项目描述
 
 ## 开发初衷
