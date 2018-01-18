@@ -94,7 +94,7 @@ def request_add_lesson(add_lession_url):
         # 如果抢课失败，（登陆超时、重复选课、未到选课时间）返回的都是 200 状态码
         # 但是会返回一个 JSON {"message": "xxx", "statusCode": "300"}
         # 如果成功抢课，那么返回一个 JSONP (js / html / css)
-        #  {"message": "登陆超时，请重新登陆！", "statusCode": "300"}
+        #  {"message": "登录超时，请重新登录！", "statusCode": "300"}
         #  {"message": "课程重复，不能选已选课程", "statusCode": "300"}
         #  {"message": "目前不在选课时间，不能选课", "statusCode": "300"}
         #  {"message": "该课程与已选课程上课时间冲突", "statusCode": "300"}
