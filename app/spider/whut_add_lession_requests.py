@@ -59,7 +59,7 @@ def request_courses():
         return '登录超时'
 
 
-def request_add_lession(add_lession_url):
+def request_add_lesson(add_lession_url):
     """
     请求添加课程
     :return:
@@ -74,6 +74,10 @@ def request_add_lession(add_lession_url):
     6 ==> 达到学分上限
     7 ==> 课程容量不足
     """
+    tag = False
+    if tag:
+        # 模拟退出登录状态，也就是登录超时
+        r = requests.get(url='http://202.114.90.180/Course/logout.do', cookies=local_thread.course_cookie, headers=headers)
     try:
         response = requests.get(url=add_lession_url, cookies=local_thread.course_cookie, headers=headers)
     except requests.exceptions.ConnectionError as e:
@@ -121,14 +125,16 @@ def request_add_lession(add_lession_url):
 
 
 def start_request(username, password, lesson_url, tasks):
+    # 教务处网站的 cookie
     local_thread.index_cookie = {}
+    # 选课网站的 cookie
     local_thread.course_cookie = {}
     # 默认初始状态为 1, 为登陆超时，需要重新登陆操作
     status = 1
     while True:
         # 还没有获得登陆状态，在登陆超时、未连接上服务器情况下需要重新模拟登陆
         # 其他状态不需要重新模拟登陆
-        if status in (1, 4):
+        if status in (1, 4, -1):
             try:
                 request_index(username, password)
                 request_courses()
@@ -136,7 +142,7 @@ def start_request(username, password, lesson_url, tasks):
                 # 途中发生了连接不上，重新请求连接
                 continue
         # 抢课逻辑
-        status = request_add_lession(lesson_url)
+        status = request_add_lesson(lesson_url)
         # 在连接不上、登陆超时、尚未开始抢课的情况下，需要继续不断重复循环
         if status == 0:
             # 成功抢课
@@ -174,7 +180,6 @@ def call_back_update_manager(username, lesson_url, tasks, status):
     回调更新 manager 的 courses 信息，更新为已完成任务
     :return:
     """
-    # print('完成一个任务')
     for index, item in enumerate(tasks):
         # 同一个用户的用一个课程 url
         if item['username'] == username and item['url'] == lesson_url:
@@ -186,7 +191,7 @@ def call_back_update_manager(username, lesson_url, tasks, status):
                 item['message'] = '失败，课程性质已超出了限制的可选门数'
             elif status == 3:
                 item['message'] = '重复选课'
-            elif status == 2:
-                item['message'] = '未到选课时间'
+            # elif status == 2:
+            #     item['message'] = '未到选课时间'
             tasks[index] = item
-            return True
+    return True

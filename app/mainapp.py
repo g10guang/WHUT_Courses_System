@@ -76,7 +76,7 @@ class MainApp(tk.Tk):
             # 清空用户选择项
             self.frames[page_name].empty_user_choice()
         elif page_name == CheckTasksPage.__name__:
-            self.geometry('1100x700')
+            self.geometry('1300x700')
             self.frames[page_name].reload_manager_list()
         else:
             # 出现尚未定义处理的页面
@@ -240,8 +240,7 @@ class ChooseCoursePage(tk.Frame):
             :return:
             """
             # 需要展示的信息
-            info = [item[TEACHER], item[LESSON_TYPE], '学分：{}'.format(item[CREDIT]),
-                    item[CLASSROOM], item[TIME]]
+            info = [item[TEACHER], item[LESSON_TYPE], '学分：{}'.format(item[CREDIT]), '容量：{}已选：{}'.format(item[CAPACITY], item[SELECTED]), item[CLASSROOM], item[TIME]]
 
             # info = [item[TEACHER], item[LESSON_TYPE], '学分：{}'.format(item[CREDIT]),
             #         '容量：{}'.format(item[CAPACITY]), '已选：{}'.format(item[SELECTED])]
@@ -271,7 +270,7 @@ class ChooseCoursePage(tk.Frame):
                     if join_course_info(item) == user_choice:
                         # 提示用户发起了抢课
                         self.controller.courses_grabbing[user_choice] = item[LESSON_URL]
-                        tk.messagebox.showinfo(title='发起抢课通知', message='正在抢：{}'.format(user_choice))
+                        # tk.messagebox.showinfo(title='发起抢课通知', message='正在抢：{}'.format(user_choice))
                         append_task_to_manager(self.controller.user_info['username'], self.controller.user_info['password'], item[LESSON_URL], self.current_2_choice + ' ' + user_choice)
 
         def back2login():
@@ -376,7 +375,7 @@ class CheckTasksPage(tk.Frame):
 
         self.tasks_list = tk.StringVar()
 
-        self.content_box = tk.Listbox(self, listvariable=self.tasks_list, height=25, width=100, font=ARIAL_14_FONT)
+        self.content_box = tk.Listbox(self, listvariable=self.tasks_list, height=25, width=130, font=ARIAL_14_FONT)
         self.content_box.place(x=10, y=40)
 
         def back_to_choose_page():

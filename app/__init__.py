@@ -60,7 +60,7 @@ ELECTIVE_COURSES_SHOW_NAME = '公选课'
 EN_PE_COURSES_SHOW_NAME = '英语体语'
 
 # 登陆超时 message
-LOGIN_TIMEOUT_MESSAGE = '登陆超时，请重新登陆！'
+LOGIN_TIMEOUT_MESSAGE = '登录超时，请重新登录！'
 
 # 重复选课
 DUPLICATE_COURSE_MESSAGE = '课程重复，不能选已选课程'

@@ -1,5 +1,9 @@
 [Download](https://github.com/g10guang/WHUT_Courses_System/raw/master/release/WHUT1.0.zip)
 
+如有发现任何问题，可以邮件联系我 [g10guang@foxmail.com](g10guang@foxmail.com)，或者 github 上提交 Issue。
+
+*Please feel free to do it.*
+
 # 项目描述
 
 ## 开发初衷
@@ -22,7 +26,7 @@
 
 - [x] 获取课程信息
 
-如选择获取课程信息，务必在抢课前进行，比如第一轮选课时间，在抢课流量峰值时，不能够确保能够爬取到课程信息。
+如选择获取课程信息，务必在抢课前进行，比如第一轮选课时间，在抢课流量峰值时，不能够确保能够爬取到课程信息。如果认为爬取信息错误，请在网络环境比较好的时候重新爬取课程信息。
 
 - [ ] 验证
 
