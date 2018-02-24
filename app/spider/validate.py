@@ -27,25 +27,16 @@ def validate_user(account, password):
         "password": password,
         "type": "xs",
     }
-    keep_request = True
-    while keep_request:
+    while 1:
         try:
             response = requests.post(url=JWC_LOGIN_URL, data=post_data, headers=headers)
-        except requests.exceptions.ConnectionError as e:
-            # 如果没有连接上教务处就继续请求，知道教务处能够被连接上
-            # 尝试连接 baidu.com 如果不能够连接就判断无法连接网络，提醒用户连接网络
+            # 教务处登陆失败也是返回 200 状态码，通过cookie中是否有 CERLOGIN 来判断是否成功登陆
+            if 'CERLOGIN' in response.cookies.keys():
+                return 1
+            return 0
+        except requests.exceptions.ConnectionError:
             try:
-                baidu_response = requests.get(BAIDU_INDEX_URL)
-            except requests.exceptions.ConnectionError as e:
-                # 确实没有网络连接，假设 baidu.com 挂掉的可能性很低
+                # 尝试连接 baidu.com 如果不能够连接就判断无法连接网络
+                _baidu_response = requests.get(BAIDU_INDEX_URL)
+            except requests.exceptions.ConnectionError:
                 return 2
-        else:
-            # 如果没有发生异常就可以结束
-            keep_request = False
-        # 连接不上网站，不断尝试
-    # 因为教务处登陆失败也是返回 200 状态码，但是能够通过cookie中是否有 CERLOGIN 来判断是否成功登陆
-    if 'CERLOGIN' in response.cookies.keys():
-        # 如果返回值中有该 cookie，则判断用户身份正确
-        return 1
-    else:
-        return 0

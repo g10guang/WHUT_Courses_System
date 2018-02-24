@@ -207,41 +207,47 @@ def get_professional_courses_info_from_table(soup, table_id, sess):
     # 判断是否有课程信息
     if tr_list:
         for tr in tr_list:
-            td_list = tr.find_all('td')
-            # 依次提取：课程名称、上课老师、上课时间、上课地点、起止周、容量、选上、本轮已选、选课方式、学分、备注、双语等级
-            tmp_dict = dict()
-            # 选课链接
-            tmp_dict[LESSON_URL] = '{}/{}'.format(COURSE_SYSTEM_URL, add_url.format(suid_obj=tr['rel']))
-            # 课程名称
-            tmp_dict[LESSON_NAME] = td_list[1].find('a').string
-            # 老师
-            tmp_dict[TEACHER] = td_list[2].find('a').string
-            # 上课时间
-            tmp_dict[TIME] = td_list[3].string
-            # 上课地点
-            tmp_dict[CLASSROOM] = td_list[4].string
-            # 起始周
-            # tmp_dict['period'] = td_list[5].string
-            # 课程容量
-            tmp_dict[CAPACITY] = td_list[6].string
-            # 已选上
-            tmp_dict[SELECTED] = td_list[7].string
-            # 本轮已选
-            tmp_dict[THIS_SELECTED] = td_list[8].string
-            # 选课方式 推荐课程 or 跨专业选课
-            tmp_dict[LESSON_TYPE] = td_list[9].string
-            # 学分
-            tmp_dict[CREDIT] = td_list[10].string
-            # 备注
-            tmp_dict[REMARK] = td_list[11].string
-            # 双语等级
-            a_tag = td_list[12].find('a')
-            if a_tag:
-                tmp_dict[LANG_LEVEL] = a_tag.string
-            else:
-                tmp_dict[LANG_LEVEL] = td_list[12].string.strip()
-            course_info.append(tmp_dict)
+            course_info.append(add_tmp_dict(tr, True))
     return course_info
+
+
+def add_tmp_dict(tr, professional=False):
+    """professional是否是专业课"""
+    td_list = tr.find_all('td')
+    if professional:
+        # 干掉专业课的起始周
+        # tmp_dict['period'] = td_list[5].string
+        td_list.pop(5)
+
+    tmp_dict = {}
+    tmp_dict[LESSON_URL] = '{}/{}'.format(COURSE_SYSTEM_URL, add_url.format(suid_obj=tr['rel']))
+    # 课程名称
+    tmp_dict[LESSON_NAME] = td_list[1].find('a').string
+    # 老师
+    tmp_dict[TEACHER] = td_list[2].find('a').string
+    # 上课时间
+    tmp_dict[TIME] = td_list[3].string
+    # 上课地点
+    tmp_dict[CLASSROOM] = td_list[4].string
+    # 课程容量
+    tmp_dict[CAPACITY] = td_list[5].string
+    # 已选上
+    tmp_dict[SELECTED] = td_list[6].string
+    # 本轮已选
+    tmp_dict[THIS_SELECTED] = td_list[7].string
+    # 选课方式 推荐课程 or 跨专业选课
+    tmp_dict[LESSON_TYPE] = td_list[8].string
+    # 学分
+    tmp_dict[CREDIT] = td_list[9].string
+    # 备注
+    tmp_dict[REMARK] = td_list[10].string
+    # 双语等级
+    a_tag = td_list[11].find('a')
+    if a_tag:
+        tmp_dict[LANG_LEVEL] = a_tag.string
+    else:
+        tmp_dict[LANG_LEVEL] = td_list[11].string.strip()
+    return tmp_dict
 
 
 def get_courses_info_from_table(soup, table_id, sess):
@@ -262,19 +268,6 @@ def get_courses_info_from_table(soup, table_id, sess):
     # 获取到底有多少门课程信息
     item_num = int(PAGE_MSG_RE_PATTERN.search(page_msg)[1])
     if item_num >= 10:
-        # 选课网站默认一页 10 条数据，所以这里出现了分页，需要重新发送请求获取所有 items
-        # 从 add_url 中获取以下数据
-        # {'flag': '2',
-        #  'gsdm': '',
-        #  'jxjhh': '2015',
-        #  'kcdm': '4210085150',
-        #  'numPerPage': 50,
-        #  'orderDirection': 'asc',
-        #  'orderField': 'jsxm,sksj',
-        #  'pageNum': 1,
-        #  'temp': 'true',
-        #  'xnxq': '2017-2018-2'}
-        # 其中 gsdm / jxjhh / kcdm / xnxq 是可以通过 add_url 获取的
         parse_result = parse.urlparse(add_url)
         # 解析 add_url 中的参数
         url_params = parse.parse_qs(parse_result.query)
@@ -303,38 +296,7 @@ def get_courses_info_from_table(soup, table_id, sess):
     # 判断是否有课程信息
     if tr_list:
         for tr in tr_list:
-            td_list = tr.find_all('td')
-            # 依次提取：课程名称、上课老师、上课时间、上课地点、起止周、容量、选上、本轮已选、选课方式、学分、备注、双语等级
-            tmp_dict = dict()
-            # 选课链接
-            tmp_dict[LESSON_URL] = '{}/{}'.format(COURSE_SYSTEM_URL, add_url.format(suid_obj=tr['rel']))
-            # 课程名称
-            tmp_dict[LESSON_NAME] = td_list[1].find('a').string
-            # 老师
-            tmp_dict[TEACHER] = td_list[2].find('a').string
-            # 上课时间
-            tmp_dict[TIME] = td_list[3].string
-            # 上课地点
-            tmp_dict[CLASSROOM] = td_list[4].string
-            # 课程容量
-            tmp_dict[CAPACITY] = td_list[5].string
-            # 已选上
-            tmp_dict[SELECTED] = td_list[6].string
-            # 本轮已选
-            tmp_dict[THIS_SELECTED] = td_list[7].string
-            # 选课方式 推荐课程 or 跨专业选课
-            tmp_dict[LESSON_TYPE] = td_list[8].string
-            # 学分
-            tmp_dict[CREDIT] = td_list[9].string
-            # 备注
-            tmp_dict[REMARK] = td_list[10].string
-            # 双语等级
-            a_tag = td_list[11].find('a')
-            if a_tag:
-                tmp_dict[LANG_LEVEL] = a_tag.string
-            else:
-                tmp_dict[LANG_LEVEL] = td_list[11].string.strip()
-            course_info.append(tmp_dict)
+            course_info.append(add_tmp_dict(tr))
     return course_info
 
 
