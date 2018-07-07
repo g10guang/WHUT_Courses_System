@@ -36,12 +36,12 @@ def request_index(account, password):
     }
     response = requests.post(url=JWC_LOGIN_URL, data=post_data, headers=headers)
     if 'CERLOGIN' in response.cookies.keys():
-        for name in response.cookies.keys():
-            local_thread.index_cookie[name] = response.cookies.get(name)
+        for name, value in response.cookies.items():
+            local_thread.index_cookie[name] = value
         return 'success login'
-    else:
-        print('账号或者密码错误')
-        return '账号或者密码错误'
+
+    print('账号或者密码错误')
+    return '账号或者密码错误'
 
 
 def request_courses():
@@ -74,34 +74,16 @@ def request_add_lesson(add_lession_url):
     6 ==> 达到学分上限
     7 ==> 课程容量不足
     """
-    tag = False
-    if tag:
-        # 模拟退出登录状态，也就是登录超时
-        r = requests.get(url='http://202.114.90.180/Course/logout.do', cookies=local_thread.course_cookie, headers=headers)
+    # tag = False
+    # if tag:
+    #     # 模拟退出登录状态，也就是登录超时
+    #     _r = requests.get(url='http://202.114.90.180/Course/logout.do', cookies=local_thread.course_cookie, headers=headers)
     try:
         response = requests.get(url=add_lession_url, cookies=local_thread.course_cookie, headers=headers)
-    except requests.exceptions.ConnectionError as e:
-        # 连接不上异常
+    except requests.exceptions.ConnectionError:
         return 4
     try:
         response_data = json.loads(response.text)
-    except json.decoder.JSONDecodeError as e:
-        # 在成功选课的时候返回一个 JSONP，是 (js/css/html) 的集合体，不是 json 对象无法解析
-        return 0
-    else:
-        # 成功解析为 json，那么证明没有 成功选课
-        # 无论是否抢到课，返回的 http 状态码都是 200
-        # 如果抢课失败，（登陆超时、重复选课、未到选课时间）返回的都是 200 状态码
-        # 但是会返回一个 JSON {"message": "xxx", "statusCode": "300"}
-        # 如果成功抢课，那么返回一个 JSONP (js / html / css)
-        #  {"message": "登录超时，请重新登录！", "statusCode": "300"}
-        #  {"message": "课程重复，不能选已选课程", "statusCode": "300"}
-        #  {"message": "目前不在选课时间，不能选课", "statusCode": "300"}
-        #  {"message": "该课程与已选课程上课时间冲突", "statusCode": "300"}
-        #  {"message": "该门课程容量不足，选课失败", "statusCode": "300"}
-        #  {"message": "你所选的课程的课程性质已超出了限制的可选门数，不能选择此课程性质的课程！", "statusCode": "300"}
-        #  http 返回状态码为 200 则成功选到了课程
-        # 进一步分析 message 信息
         response_message = response_data.get(SELECT_COURSE_MESSAGE)
         if response_message == LOGIN_TIMEOUT_MESSAGE:
             # 登陆超时
@@ -121,7 +103,10 @@ def request_add_lesson(add_lession_url):
         elif response_message == NO_ENOUGH_POSITION:
             # 课程容量不足
             return 7
-    return -1
+        return -1
+    except json.decoder.JSONDecodeError:
+        # 在成功选课的时候返回一个 JSONP，是 (js/css/html) 的集合体，不是 json 对象无法解析
+        return 0
 
 
 def start_request(username, password, lesson_url, tasks):
@@ -131,46 +116,20 @@ def start_request(username, password, lesson_url, tasks):
     local_thread.course_cookie = {}
     # 默认初始状态为 1, 为登陆超时，需要重新登陆操作
     status = 1
-    while True:
+    while 1:
+        if status in (0, 3, 5, 6):
+            # 0:成功 3:重复选课 5:时间冲突 6:学分上限
+            # 4:在连接不上、1:登陆超时、2:尚未开始抢课，需要继续不断重复循环
+            break
         # 还没有获得登陆状态，在登陆超时、未连接上服务器情况下需要重新模拟登陆
         # 其他状态不需要重新模拟登陆
-        if status in (1, 4, -1):
+        elif status in (1, 4, -1):
             try:
                 request_index(username, password)
                 request_courses()
-            except requests.exceptions.ConnectionError as e:
-                # 途中发生了连接不上，重新请求连接
-                continue
-        # 抢课逻辑
+            except requests.exceptions.ConnectionError:
+                pass
         status = request_add_lesson(lesson_url)
-        # 在连接不上、登陆超时、尚未开始抢课的情况下，需要继续不断重复循环
-        if status == 0:
-            # 成功抢课
-            break
-        elif status == 1:
-            # 登陆超时
-            pass
-        elif status == 2:
-            # 未到抢课时间
-            pass
-        elif status == 3:
-            # 重复选课
-            break
-        elif status == 4:
-            # 连接不上选课页面
-            pass
-        elif status == 5:
-            # 选课时间冲突
-            break
-        elif status == 6:
-            # 达到学分上限
-            break
-        elif status == 7:
-            # 课程容量不足，一直发送请求，等候课程有名额
-            pass
-        else:
-            # 遇到了不能够处理的状态码，一直循环
-            pass
     # 更新状态是当前线程的最后一步
     call_back_update_manager(username, lesson_url, tasks, status)
 

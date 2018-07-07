@@ -16,12 +16,8 @@ def remove_space(string):
     :param string:
     :return:
     """
-    new = []
-    empty_ch = {' ', '\t', '\n', '\r'}
-    for ch in string:
-        if ch not in empty_ch:
-            new.append(ch)
-    return ''.join(new)
+    empty_ch = (' ', '\t', '\n', '\r')
+    return ''.join([ch for ch in string if ch not in empty_ch])
 
 
 def clean_lesson_name(courses):
@@ -30,7 +26,7 @@ def clean_lesson_name(courses):
     :param courses: 课程 list
     :return:
     """
-    for k, v in courses.items():
+    for _k, v in courses.items():
         for item in v:
             item[LESSON_NAME] = remove_space(item[LESSON_NAME])
 
