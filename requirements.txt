@@ -16,7 +16,7 @@ incremental==17.5.0
 lxml==4.1.1
 olefile==0.44
 parsel==1.2.0
-Pillow==4.3.0
+Pillow==6.2.0
 pyasn1==0.4.2
 pyasn1-modules==0.2.1
 pycparser==2.18
