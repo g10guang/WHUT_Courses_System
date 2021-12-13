@@ -13,7 +13,7 @@ html5lib==1.0.1
 hyperlink==17.3.1
 idna==2.6
 incremental==17.5.0
-lxml==4.1.1
+lxml==4.6.5
 olefile==0.44
 parsel==1.2.0
 Pillow==4.3.0
