@@ -25,7 +25,7 @@ pyOpenSSL==17.4.0
 pypiwin32==220
 queuelib==1.4.2
 requests==2.18.4
-Scrapy==1.4.0
+Scrapy==1.8.2
 service-identity==17.0.0
 six==1.11.0
 Twisted==17.9.0
